@@ -133,6 +133,10 @@ export default function Library() {
 
         // Visual Hack: 160px is min-width for viewport width of >600
         const scrollableTabs = window.innerWidth < categories.length * 160;
+        if (!categories || categories.length < 1 || Number.isNaN(parseInt(selectedTab, 10))) {
+            return null;
+        }
+
         const tabDefines = categories.map((tab) => (
             <Tab
                 label={tab.category.name}
@@ -167,11 +171,9 @@ export default function Library() {
                 <Route path={`${path}/:categoryOrder`}>
                     <MangaGridWrapper
                         hasNextPage={false}
-                        {...{
-                            lastPageNum,
-                            setLastPageNum,
-                            categories,
-                        }}
+                        lastPageNum={lastPageNum}
+                        setLastPageNum={setLastPageNum}
+                        categories={categories}
                     />
                 </Route>
                 <Route>
