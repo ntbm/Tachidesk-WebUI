@@ -5,15 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import { Tab, Tabs } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import MangaGrid from 'components/manga/MangaGrid';
+import MangaGrid, { IMangaGridProps } from 'components/manga/MangaGrid';
 import NavbarContext from 'context/NavbarContext';
 import client from 'util/client';
 import cloneObject from 'util/cloneObject';
 import EmptyView from 'components/EmptyView';
 import LoadingPlaceholder from 'components/LoadingPlaceholder';
-import TabPanel from 'components/util/TabPanel';
+import {
+    Link,
+    Redirect, Route, Switch, useLocation, useParams, useRouteMatch,
+} from 'react-router-dom';
+import { Tab, Tabs } from '@mui/material';
 
 interface IMangaCategory {
     category: ICategory
@@ -21,117 +24,163 @@ interface IMangaCategory {
     isFetched: boolean
 }
 
-export default function Library() {
-    const { setTitle, setAction } = useContext(NavbarContext);
-    useEffect(() => { setTitle('Library'); setAction(<></>); }, []);
+type MangaGridWrapperProps =
+    Omit<Omit<IMangaGridProps, 'mangas'>, 'isLoading'>
+    & {
+        categories: IMangaCategory[]
+    };
 
-    const [tabs, setTabs] = useState<IMangaCategory[]>();
-    const [tabNum, setTabNum] = useState<number>(0);
+function MangaGridWrapper(props: MangaGridWrapperProps) {
+    const {
+        categories,
+        message,
+        messageExtra,
+        hasNextPage,
+        lastPageNum,
+        setLastPageNum,
+    } = props;
+    const { categoryOrder } = useParams<{ categoryOrder: string }>();
+    const categoryIndex = parseInt(categoryOrder, 10);
+    const validSelection = Number.isNaN(categoryIndex)
+        || !categories
+        || !categories[categoryIndex];
+    if (validSelection) {
+        return <Redirect to="/library" />;
+    }
+
+    return (
+        <MangaGrid
+            mangas={categories[categoryIndex].mangas}
+            isLoading={!categories[categoryIndex].isFetched}
+            message={message}
+            messageExtra={messageExtra}
+            hasNextPage={hasNextPage}
+            lastPageNum={lastPageNum}
+            setLastPageNum={setLastPageNum}
+        />
+    );
+}
+
+export default function Library() {
+    const {
+        path, // "/library" Mount Point
+        url,
+    } = useRouteMatch();
+    const { pathname } = useLocation(); // /library/:id maybe /library/:id/sub/path later
+    const categoryOrder = pathname
+        .replace(`${path}/`, '')
+        .split('/')[0];
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const {
+        setTitle,
+        setAction,
+    } = useContext(NavbarContext);
+    useEffect(() => {
+        setTitle('Library');
+        setAction(<></>);
+    }, []);
+    const [categories, setCategories] = useState<IMangaCategory[]>();
 
     // a hack so MangaGrid doesn't stop working. I won't change it in case
     // if I do manga pagination for library..
     const [lastPageNum, setLastPageNum] = useState<number>(1);
 
-    const handleTabChange = (newTab: number) => {
-        setTabNum(newTab);
-    };
-
     useEffect(() => {
         client.get('/api/v1/category')
             .then((response) => response.data)
-            .then((categories: ICategory[]) => {
-                const categoryTabs = categories.map((category) => ({
+            .then((_categories: ICategory[]) => {
+                const categoryTabs = _categories.map((category) => ({
                     category,
                     mangas: [] as IManga[],
                     isFetched: false,
                 }));
 
-                setTabs(categoryTabs);
-                if (categoryTabs.length > 0) {
-                    setTabNum(categoryTabs[0].category.order);
-                }
+                setCategories(categoryTabs);
             });
     }, []);
 
     // fetch the current tab
     useEffect(() => {
-        if (tabs !== undefined) {
-            tabs.forEach((tab, index) => {
-                if (tab.category.order === tabNum && !tab.isFetched) {
+        if (categories !== undefined) {
+            categories.forEach((tab, index) => {
+                if (tab.category.order === parseInt(categoryOrder, 10) && !tab.isFetched) {
                     // eslint-disable-next-line @typescript-eslint/no-shadow
                     client.get(`/api/v1/category/${tab.category.id}`)
                         .then((response) => response.data)
                         .then((data: IManga[]) => {
-                            const tabsClone = cloneObject(tabs);
+                            const tabsClone = cloneObject(categories);
                             tabsClone[index].mangas = data;
                             tabsClone[index].isFetched = true;
 
-                            setTabs(tabsClone);
+                            setCategories(tabsClone);
                         });
                 }
             });
         }
-    }, [tabs?.length, tabNum]);
+    }, [categories?.length, categoryOrder]);
 
-    if (tabs === undefined) {
+    if (categories === undefined) {
         return <LoadingPlaceholder />;
     }
 
-    if (tabs.length === 0) {
+    if (categories.length === 0) {
         return <EmptyView message="Your Library is empty" />;
     }
 
-    let toRender;
-    if (tabs.length > 1) {
-        // eslint-disable-next-line max-len
-        const tabDefines = tabs.map((tab) => (<Tab label={tab.category.name} value={tab.category.order} />));
-
-        const tabBodies = tabs.map((tab) => (
-            <TabPanel index={tab.category.order} currentIndex={tabNum}>
-                <MangaGrid
-                    mangas={tab.mangas}
-                    hasNextPage={false}
-                    lastPageNum={lastPageNum}
-                    setLastPageNum={setLastPageNum}
-                    message="Category is Empty"
-                    isLoading={!tab.isFetched}
-                />
-            </TabPanel>
-        ));
+    const TabBar = (props: { selectedTab: string }) => {
+        const { selectedTab } = props;
 
         // Visual Hack: 160px is min-width for viewport width of >600
-        const scrollableTabs = window.innerWidth < tabs.length * 160;
-        toRender = (
-            <>
-                <Tabs
-                    key={tabNum}
-                    value={tabNum}
-                    onChange={(e, newTab) => handleTabChange(newTab)}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    centered={!scrollableTabs}
-                    variant={scrollableTabs ? 'scrollable' : 'fullWidth'}
-                    scrollButtons
-                    allowScrollButtonsMobile
-                >
-                    {tabDefines}
-                </Tabs>
-                {tabBodies}
-            </>
-        );
-    } else {
-        const mangas = tabs.length === 1 ? tabs[0].mangas : [];
-        toRender = (
-            <MangaGrid
-                mangas={mangas}
-                hasNextPage={false}
-                lastPageNum={lastPageNum}
-                setLastPageNum={setLastPageNum}
-                message="Your Library is empty"
-                isLoading={!tabs[0].isFetched}
+        const scrollableTabs = window.innerWidth < categories.length * 160;
+        const tabDefines = categories.map((tab) => (
+            <Tab
+                label={tab.category.name}
+                value={tab.category.order}
+                key={tab.category.order}
+                component={Link}
+                to={`${path}/${tab.category.order}`}
+                replace
             />
-        );
-    }
+        ));
 
-    return toRender;
+        return (
+            <Tabs
+                key={selectedTab}
+                value={parseInt(selectedTab, 10)}
+                indicatorColor="primary"
+                textColor="primary"
+                centered={!scrollableTabs}
+                variant={scrollableTabs ? 'scrollable' : 'fullWidth'}
+                scrollButtons
+                allowScrollButtonsMobile
+            >
+                {tabDefines}
+            </Tabs>
+        );
+    };
+
+    return (
+        <>
+            <TabBar selectedTab={categoryOrder} />
+            <Switch>
+                <Route path={`${path}/:categoryOrder`}>
+                    <MangaGridWrapper
+                        hasNextPage={false}
+                        {...{
+                            lastPageNum,
+                            setLastPageNum,
+                            categories,
+                        }}
+                    />
+                </Route>
+                <Route>
+                    <Redirect
+                        push={false}
+                        to={`${url}/0`}
+                    />
+                </Route>
+            </Switch>
+        </>
+    );
 }
