@@ -6,26 +6,26 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import React, { useContext, useEffect, useState } from 'react';
-import MangaGrid, { IMangaGridProps } from 'components/manga/MangaGrid';
 import NavbarContext from 'context/NavbarContext';
 import client from 'util/client';
 import cloneObject from 'util/cloneObject';
 import EmptyView from 'components/EmptyView';
 import LoadingPlaceholder from 'components/LoadingPlaceholder';
 import {
-    Link,
-    Redirect, Route, Switch, useLocation, useParams, useRouteMatch,
+    Redirect, Route, Switch, useLocation, useRouteMatch,
 } from 'react-router-dom';
 import { FormControlLabel, Tab, Tabs } from '@mui/material';
-import { useQueryParam, BooleanParam } from 'use-query-params';
 import ThreeStateCheckbox from '../../components/ThreeStateCheckbox';
+import useLibraryOptions from '../../util/useLibraryOptions';
+import LibraryMangaGrid from '../../components/library/LibraryMangaGrid';
+import LinkWithQuery from '../../components/util/LinkWithQuery';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Filters() {
-    const [unread, setUnread] = useQueryParam('unread', BooleanParam);
+    const { unread, setUnread } = useLibraryOptions();
     return (
         <div>
-            <FormControlLabel control={<ThreeStateCheckbox name="Unread" checked={unread} onChange={setUnread} />} label="Ungelesen" />
+            <FormControlLabel control={<ThreeStateCheckbox name="Unread" checked={unread} onChange={setUnread} />} label="Unread" />
         </div>
     );
 }
@@ -34,43 +34,6 @@ interface IMangaCategory {
     category: ICategory
     mangas: IManga[]
     isFetched: boolean
-}
-
-type MangaGridWrapperProps =
-    Omit<Omit<IMangaGridProps, 'mangas'>, 'isLoading'>
-    & {
-        categories: IMangaCategory[]
-    };
-
-function MangaGridWrapper(props: MangaGridWrapperProps) {
-    const {
-        categories,
-        message,
-        messageExtra,
-        hasNextPage,
-        lastPageNum,
-        setLastPageNum,
-    } = props;
-    const { categoryOrder } = useParams<{ categoryOrder: string }>();
-    const categoryIndex = parseInt(categoryOrder, 10);
-    const validSelection = Number.isNaN(categoryIndex)
-        || !categories
-        || !categories[categoryIndex];
-    if (validSelection) {
-        return <Redirect to="/library" />;
-    }
-
-    return (
-        <MangaGrid
-            mangas={categories[categoryIndex].mangas}
-            isLoading={!categories[categoryIndex].isFetched}
-            message={message}
-            messageExtra={messageExtra}
-            hasNextPage={hasNextPage}
-            lastPageNum={lastPageNum}
-            setLastPageNum={setLastPageNum}
-        />
-    );
 }
 
 export default function Library() {
@@ -154,7 +117,7 @@ export default function Library() {
                 label={tab.category.name}
                 value={tab.category.order}
                 key={tab.category.order}
-                component={Link}
+                component={LinkWithQuery}
                 to={`${path}/${tab.category.order}`}
                 replace
             />
@@ -181,7 +144,7 @@ export default function Library() {
             <TabBar selectedTab={categoryOrder} />
             <Switch>
                 <Route path={`${path}/:categoryOrder`}>
-                    <MangaGridWrapper
+                    <LibraryMangaGrid
                         hasNextPage={false}
                         lastPageNum={lastPageNum}
                         setLastPageNum={setLastPageNum}
