@@ -75,7 +75,6 @@ const ThreeStateCheckbox = (props: IThreeStateCheckboxProps) => {
             indeterminateIcon={<ClearIcon />}
             onChange={handleChange}
             className={`${localChecked}`}
-            {...{ props }}
         />
     );
 };
