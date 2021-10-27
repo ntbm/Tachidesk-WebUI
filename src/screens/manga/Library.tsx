@@ -16,7 +16,19 @@ import {
     Link,
     Redirect, Route, Switch, useLocation, useParams, useRouteMatch,
 } from 'react-router-dom';
-import { Tab, Tabs } from '@mui/material';
+import { FormControlLabel, Tab, Tabs } from '@mui/material';
+import { useQueryParam, BooleanParam } from 'use-query-params';
+import ThreeStateCheckbox from '../../components/ThreeStateCheckbox';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function Filters() {
+    const [unread, setUnread] = useQueryParam('unread', BooleanParam);
+    return (
+        <div>
+            <FormControlLabel control={<ThreeStateCheckbox name="Unread" checked={unread} onChange={setUnread} />} label="Ungelesen" />
+        </div>
+    );
+}
 
 interface IMangaCategory {
     category: ICategory

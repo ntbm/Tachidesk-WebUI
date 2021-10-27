@@ -11,6 +11,7 @@ import {
     Route,
     Redirect,
 } from 'react-router-dom';
+import { QueryParamProvider } from 'use-query-params';
 import { Container, useMediaQuery } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import {
@@ -144,9 +145,11 @@ export default function App() {
                                 <Route path="/manga/:id">
                                     <Manga />
                                 </Route>
-                                <Route path="/library">
-                                    <Library />
-                                </Route>
+                                <QueryParamProvider ReactRouterRoute={Route}>
+                                    <Route path="/library">
+                                        <Library />
+                                    </Route>
+                                </QueryParamProvider>
                                 <Route path="/updates">
                                     <Updates />
                                 </Route>
