@@ -106,6 +106,7 @@ export default function App() {
                                 style={{
                                     marginTop: theme.spacing(8),
                                     marginLeft: isMobileWidth ? '' : theme.spacing(8),
+                                    marginBottom: isMobileWidth ? theme.spacing(8) : '',
                                     width: 'auto',
                                     overflow: 'auto',
                                 }}
@@ -119,7 +120,6 @@ export default function App() {
                                             <Redirect to="/library" />
                                         )}
                                     />
-
                                     <Route path="/settings/about">
                                         <About />
                                     </Route>
