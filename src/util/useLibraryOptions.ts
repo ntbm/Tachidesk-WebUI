@@ -22,7 +22,7 @@ export default function useLibraryOptions(): IUseLibraryOptions {
     });
     const { unread } = query;
     const setUnread = (newUnread: NullAndUndefined<boolean>) => {
-        setQuery(Object.assign(query, { unread: newUnread }));
+        setQuery(Object.assign(query, { unread: newUnread }), 'replace');
     };
     // eslint-disable-next-line eqeqeq
     const active = !(unread == undefined);
