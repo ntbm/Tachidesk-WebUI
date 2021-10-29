@@ -28,7 +28,7 @@ export default function LibraryOptions() {
         <>
             <IconButton
                 onClick={() => setFiltersOpen(!filtersOpen)}
-                color={active ? 'info' : 'default'}
+                color={active ? 'warning' : 'default'}
             >
                 <FilterListIcon />
             </IconButton>
