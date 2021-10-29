@@ -31,11 +31,12 @@ export default function LibraryMangaGrid(props: MangaGridWrapperProps) {
         lastPageNum,
         setLastPageNum,
     } = props;
-    const { categoryOrder } = useParams<{ categoryOrder: string }>();
-    const categoryIndex = parseInt(categoryOrder, 10);
-    const invalidSelection = Number.isNaN(categoryIndex)
+    const { categoryOrder: orderFromParams } = useParams<{ categoryOrder: string }>();
+    const categoryOrder = parseInt(orderFromParams, 10);
+    const invalidSelection = Number.isNaN(categoryOrder)
         || !categories
-        || !categories[categoryIndex];
+        || categories.filter((c) => c.category.order === categoryOrder).length === 0;
+    const categoryIndex = categories.findIndex((c) => c.category.order === categoryOrder);
     if (invalidSelection) {
         return <Redirect to="/library" />;
     }
@@ -44,9 +45,9 @@ export default function LibraryMangaGrid(props: MangaGridWrapperProps) {
         .filter((manga) => {
             switch (unread) {
                 case true:
-                    return !!manga.unread_count && manga.unread_count >= 1;
+                    return !!manga.unreadCount && manga.unreadCount >= 1;
                 case false:
-                    return manga.unread_count === 0;
+                    return manga.unreadCount === 0;
                 default:
                     return true;
             }

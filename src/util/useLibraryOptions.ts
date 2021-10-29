@@ -6,18 +6,27 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { BooleanParam, useQueryParam } from 'use-query-params';
+import { BooleanParam, useQueryParams } from 'use-query-params';
 
 export type NullAndUndefined<T> = T | null | undefined;
 
 interface IUseLibraryOptions {
     unread: NullAndUndefined<boolean>
     setUnread: (unread: NullAndUndefined<boolean>) => void
+    active: boolean
 }
 
 export default function useLibraryOptions(): IUseLibraryOptions {
-    const [unread, setUnread] = useQueryParam('unread', BooleanParam);
+    const [query, setQuery] = useQueryParams({
+        unread: BooleanParam,
+    });
+    const { unread } = query;
+    const setUnread = (newUnread: NullAndUndefined<boolean>) => {
+        setQuery(Object.assign(query, { unread: newUnread }));
+    };
+    // eslint-disable-next-line eqeqeq
+    const active = !(unread == undefined);
     return {
-        unread, setUnread,
+        unread, setUnread, active,
     };
 }

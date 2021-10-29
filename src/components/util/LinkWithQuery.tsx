@@ -9,10 +9,17 @@
 import { Link, LinkProps, useLocation } from 'react-router-dom';
 import React from 'react';
 
-export default function LinkWithQuery(props: LinkProps) {
+interface LinkWithQueryProps extends LinkProps {
+    to: string
+    replace: boolean
+}
+
+function LinkWithQuery(props: LinkWithQueryProps, ref: React.Ref<HTMLAnchorElement>) {
     const { search } = useLocation();
-    const { to } = props;
+    const { to, replace } = props;
 
     // eslint-disable-next-line react/jsx-props-no-spreading
-    return <Link {...props} to={to + search} />;
+    return <Link {...props} to={to + search} replace={replace} innerRef={ref} />;
 }
+
+export default React.forwardRef(LinkWithQuery);

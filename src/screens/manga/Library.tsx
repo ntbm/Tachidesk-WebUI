@@ -14,21 +14,10 @@ import LoadingPlaceholder from 'components/LoadingPlaceholder';
 import {
     Redirect, Route, Switch, useLocation, useRouteMatch,
 } from 'react-router-dom';
-import { FormControlLabel, Tab, Tabs } from '@mui/material';
-import ThreeStateCheckbox from '../../components/ThreeStateCheckbox';
-import useLibraryOptions from '../../util/useLibraryOptions';
+import { Tab, Tabs } from '@mui/material';
 import LibraryMangaGrid from '../../components/library/LibraryMangaGrid';
 import LinkWithQuery from '../../components/util/LinkWithQuery';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function Filters() {
-    const { unread, setUnread } = useLibraryOptions();
-    return (
-        <div>
-            <FormControlLabel control={<ThreeStateCheckbox name="Unread" checked={unread} onChange={setUnread} />} label="Unread" />
-        </div>
-    );
-}
+import LibraryOptions from '../../components/library/LibraryOptions';
 
 interface IMangaCategory {
     category: ICategory
@@ -53,7 +42,7 @@ export default function Library() {
     } = useContext(NavbarContext);
     useEffect(() => {
         setTitle('Library');
-        setAction(<></>);
+        setAction(<><LibraryOptions /></>);
     }, []);
     const [categories, setCategories] = useState<IMangaCategory[]>();
 
@@ -108,7 +97,7 @@ export default function Library() {
 
         // Visual Hack: 160px is min-width for viewport width of >600
         const scrollableTabs = window.innerWidth < categories.length * 160;
-        if (!categories || categories.length < 1 || Number.isNaN(parseInt(selectedTab, 10))) {
+        if (!categories || categories.length < 2 || Number.isNaN(parseInt(selectedTab, 10))) {
             return null;
         }
 
@@ -154,7 +143,7 @@ export default function Library() {
                 <Route>
                     <Redirect
                         push={false}
-                        to={`${url}/0`}
+                        to={`${url}/${categories[0].category.order}`}
                     />
                 </Route>
             </Switch>
