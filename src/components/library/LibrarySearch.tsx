@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import { IconButton, Input } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
-import useLibraryOptions from '../../util/useLibraryOptions';
+import useLibraryOptions from 'util/useLibraryOptions';
 
 export default function LibrarySearch() {
     const {
